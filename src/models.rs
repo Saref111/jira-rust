@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+
+#[derive(PartialEq, Debug)]
 pub enum Status {
     Open,
     InProgress,
@@ -5,11 +8,12 @@ pub enum Status {
     Closed,
 }
 
+#[derive(PartialEq, Debug)]
 pub struct Epic {
-    name: String,
-    description: String,
-    status: Status,
-    stories: Vec<u64>,
+    pub name: String,
+    pub description: String,
+    pub status: Status,
+    pub stories: Vec<u64>,
 }
 
 impl Epic {
@@ -23,18 +27,16 @@ impl Epic {
     }
 }
 
+#[derive(PartialEq, Debug)]
 pub struct Story {
-    id: u64,
-    name: String,
-    description: String,
-    status: Status,
+    pub name: String,
+    pub description: String,
+    pub status: Status,
 }
 
 impl Story {
     pub fn new(name: String, description: String) -> Self {
-        let last_item_id = 0;
         Self {
-            id: last_item_id + 1,
             name,
             description,
             status: Status::Open
@@ -42,9 +44,9 @@ impl Story {
     }
 }
 
+#[derive(PartialEq, Debug)]
 pub struct DBState {
-    pub last_item_id: u64,
-    pub epics: Vec<Epic>,
-    pub stories: Vec<Story>,
-    // TODO: add fields (make sure the fields are public)
+    pub last_item_id: i32,
+    pub epics: HashMap<i32, Epic>,
+    pub stories: HashMap<i32, Story>,
 }
