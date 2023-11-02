@@ -57,7 +57,7 @@ impl Story {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Serialize, Deserialize)]
 pub struct DBState {
     pub last_item_id: i32,
     pub epics: HashMap<i32, Epic>,

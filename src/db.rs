@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs::read_to_string};
+use std::{collections::HashMap, fs::{read_to_string, self}};
 use serde_json::Value;
 use anyhow::Result;
 
@@ -28,6 +28,8 @@ impl Database for JSONFileDatabase {
     }
 
     fn write_db(&self, db_state: &DBState) -> Result<()> {
+        let json = serde_json::to_string(db_state)?;
+        fs::write(&self.file_path, json)?;
         Ok(())
     }
 }
