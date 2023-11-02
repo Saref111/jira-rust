@@ -43,8 +43,8 @@ impl Story {
 }
 
 pub struct DBState {
-    last_item_id: u64,
-    epics: Vec<Epic>,
-    stories: Vec<Story>,
+    pub last_item_id: u64,
+    pub epics: Vec<Epic>,
+    pub stories: Vec<Story>,
     // TODO: add fields (make sure the fields are public)
 }
