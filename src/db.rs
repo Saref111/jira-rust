@@ -1,5 +1,5 @@
-use std::collections::HashMap;
-
+use std::{collections::HashMap, fs::read_to_string};
+use serde_json::Value;
 use anyhow::Result;
 
 use crate::models::{DBState, Epic, Story, Status};
@@ -16,10 +16,14 @@ struct JSONFileDatabase {
 
 impl Database for JSONFileDatabase {
     fn read_db(&self) -> Result<DBState> {
+        let file = read_to_string(&self.file_path)?;
+        let file_val: Value = serde_json::from_str(file.as_str())?;
+        let epics = serde_json::from_value(file_val["epics"].clone())?;
+        let stories = serde_json::from_value(file_val["stories"].clone())?;
         Ok(DBState {
-            last_item_id: 0,
-            epics: HashMap::new(),
-            stories: HashMap::new(),
+            last_item_id: file_val["last_item_id"].as_i64().unwrap_or(0) as i32,
+            epics,
+            stories
         })
     }
 
@@ -100,7 +104,7 @@ mod tests {
             let read_result = db.read_db().unwrap();
 
             assert_eq!(write_result.is_ok(), true);
-            // TODO: fix this error by deriving the appropriate traits for DBState
+
             assert_eq!(read_result, state);
         }
     }

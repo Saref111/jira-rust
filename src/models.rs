@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
-#[derive(PartialEq, Debug)]
+use serde::{Serialize, Deserialize};
+
+#[derive(PartialEq, Debug, Serialize, Deserialize)]
 pub enum Status {
     Open,
     InProgress,
@@ -8,12 +10,23 @@ pub enum Status {
     Closed,
 }
 
-#[derive(PartialEq, Debug)]
+impl From<String> for Status {
+    fn from(s: String) -> Self {
+        match s.as_str() {
+            "Open" => Status::Open,
+            "InProgress" => Status::InProgress,
+            "Resolved" => Status::Resolved,
+            "Closed" => Status::Closed,
+            _ => Status::Open,
+        }
+}
+}
+#[derive(PartialEq, Debug, Serialize, Deserialize)]
 pub struct Epic {
     pub name: String,
     pub description: String,
     pub status: Status,
-    pub stories: Vec<u64>,
+    pub stories: Vec<i32>,
 }
 
 impl Epic {
@@ -27,7 +40,7 @@ impl Epic {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Serialize, Deserialize)]
 pub struct Story {
     pub name: String,
     pub description: String,
