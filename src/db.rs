@@ -16,14 +16,8 @@ struct JSONFileDatabase {
 impl Database for JSONFileDatabase {
     fn read_db(&self) -> Result<DBState> {
         let file = read_to_string(&self.file_path)?;
-        let file_val: Value = serde_json::from_str(file.as_str())?;
-        let epics = serde_json::from_value(file_val["epics"].clone())?;
-        let stories = serde_json::from_value(file_val["stories"].clone())?;
-        Ok(DBState {
-            last_item_id: file_val["last_item_id"].as_i64().unwrap_or(0) as u32,
-            epics,
-            stories
-        })
+        let db: DBState = serde_json::from_str(file.as_str())?;
+        Ok(db)
     }
 
     fn write_db(&self, db_state: &DBState) -> Result<()> {
@@ -94,7 +88,7 @@ impl JiraDatabase {
         db.stories
                 .remove(&story_id)
                 .ok_or(anyhow!("Strory with id #{} was not found.", epic_id))?;
-        let mut epic = db.epics.get_mut(&epic_id).ok_or(anyhow!("Strory with id #{} was not found.", story_id))?;
+        let mut epic = db.epics.get_mut(&epic_id).ok_or(anyhow!("Epic with id #{} was not found.", epic_id))?;
         epic.stories = epic.stories.clone().into_iter().filter(|s| *s != story_id).collect::<Vec<u32>>();
         
         self.database.write_db(&db)?;
@@ -102,11 +96,21 @@ impl JiraDatabase {
     }
     
     pub fn update_epic_status(&self, epic_id: u32, status: Status) -> Result<()> {
-        todo!()
+        let mut db = self.database.read_db()?;
+        let mut epic = db.epics.get_mut(&epic_id).ok_or(anyhow!("Epic with id #{} was not found.", epic_id))?;
+        epic.status = status;
+
+        self.database.write_db(&db)?;
+        Ok(())
     }
     
     pub fn update_story_status(&self, story_id: u32, status: Status) -> Result<()> {
-        todo!()
+        let mut db = self.database.read_db()?;
+        let mut story = db.stories.get_mut(&story_id).ok_or(anyhow!("Story with id #{} was not found.", story_id))?;
+        story.status = status;
+
+        self.database.write_db(&db)?;
+        Ok(())
     }
 }
 
