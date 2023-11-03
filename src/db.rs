@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fs::{read_to_string, self}};
 use serde_json::Value;
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 
 use crate::models::{DBState, Epic, Story, Status};
 
@@ -10,19 +10,36 @@ pub struct JiraDatabase {
 
 impl JiraDatabase {
     pub fn new(file_path: String) -> Self {
-        todo!()
+        Self { database: Box::new(JSONFileDatabase { file_path }) }
     }
 
     pub fn read_db(&self) -> Result<DBState> {
-        todo!()
+        self.database.read_db()
     }
     
     pub fn create_epic(&self, epic: Epic) -> Result<u32> {
-        todo!()
+        let mut db = self.database.read_db()?;
+        let epic_id = db.last_item_id + 1;
+
+        db.epics.insert(epic_id, epic);
+        self.database.write_db(&db)?;
+        Ok(epic_id)
     }
     
     pub fn create_story(&self, story: Story, epic_id: u32) -> Result<u32> {
-        todo!()
+        let mut db = self.database.read_db()?;
+        let story_id = db.last_item_id + 1;
+
+        db.stories.insert(story_id, story);
+        match db.epics.get_mut(&epic_id) {
+            Some(e) => {
+                e.stories.push(story_id);
+
+                self.database.write_db(&db)?;
+                Ok(story_id)
+            },
+            None => Err(anyhow!("Epic with {} was not found.", epic_id))
+        }
     }
     
     pub fn delete_epic(&self, epic_id: u32) -> Result<()> {
