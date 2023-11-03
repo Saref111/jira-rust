@@ -4,62 +4,6 @@ use anyhow::{Result, anyhow};
 
 use crate::models::{DBState, Epic, Story, Status};
 
-pub struct JiraDatabase {
-    database: Box<dyn Database>
-}
-
-impl JiraDatabase {
-    pub fn new(file_path: String) -> Self {
-        Self { database: Box::new(JSONFileDatabase { file_path }) }
-    }
-
-    pub fn read_db(&self) -> Result<DBState> {
-        self.database.read_db()
-    }
-    
-    pub fn create_epic(&self, epic: Epic) -> Result<u32> {
-        let mut db = self.database.read_db()?;
-        let epic_id = db.last_item_id + 1;
-
-        db.epics.insert(epic_id, epic);
-        self.database.write_db(&db)?;
-        Ok(epic_id)
-    }
-    
-    pub fn create_story(&self, story: Story, epic_id: u32) -> Result<u32> {
-        let mut db = self.database.read_db()?;
-        let story_id = db.last_item_id + 1;
-
-        db.stories.insert(story_id, story);
-        match db.epics.get_mut(&epic_id) {
-            Some(e) => {
-                e.stories.push(story_id);
-
-                self.database.write_db(&db)?;
-                Ok(story_id)
-            },
-            None => Err(anyhow!("Epic with {} was not found.", epic_id))
-        }
-    }
-    
-    pub fn delete_epic(&self, epic_id: u32) -> Result<()> {
-        todo!()
-    }
-    
-    pub fn delete_story(&self,epic_id: u32, story_id: u32) -> Result<()> {
-        todo!()
-    }
-    
-    pub fn update_epic_status(&self, epic_id: u32, status: Status) -> Result<()> {
-        todo!()
-    }
-    
-    pub fn update_story_status(&self, story_id: u32, status: Status) -> Result<()> {
-        todo!()
-    }
-}
-
-
 trait Database {
     fn read_db(&self) -> Result<DBState>;
     fn write_db(&self, db_state: &DBState) -> Result<()>;
@@ -89,6 +33,82 @@ impl Database for JSONFileDatabase {
     }
 }
 
+pub struct JiraDatabase {
+    database: Box<dyn Database>
+}
+
+impl JiraDatabase {
+    pub fn new(file_path: String) -> Self {
+        Self { database: Box::new(JSONFileDatabase { file_path }) }
+    }
+
+    pub fn read_db(&self) -> Result<DBState> {
+        self.database.read_db()
+    }
+    
+    pub fn create_epic(&self, epic: Epic) -> Result<u32> {
+        let mut db = self.database.read_db()?;
+        let epic_id = db.last_item_id + 1;
+
+        db.epics.insert(epic_id, epic);
+        db.last_item_id = epic_id;
+        self.database.write_db(&db)?;
+        Ok(epic_id)
+    }
+    
+    pub fn create_story(&self, story: Story, epic_id: u32) -> Result<u32> {
+        let mut db = self.database.read_db()?;
+        let story_id = db.last_item_id + 1;
+
+        db.stories.insert(story_id, story);
+        match db.epics.get_mut(&epic_id) {
+            Some(e) => {
+                e.stories.push(story_id);
+
+                db.last_item_id = story_id;
+                self.database.write_db(&db)?;
+                Ok(story_id)
+            },
+            None => Err(anyhow!("Epic with id #{} was not found.", epic_id))
+        }
+    }
+    
+    pub fn delete_epic(&self, epic_id: u32) -> Result<()> {
+        let mut db = self.database.read_db()?;
+        let removed_epic = db.epics
+                                .remove(&epic_id)
+                                .ok_or(anyhow!("Epic with id #{} was not found.", epic_id))?;
+
+        for story_id in &removed_epic.stories {
+            db.stories
+                .remove(&story_id)
+                .ok_or(anyhow!("Strory with id #{} was not found.", story_id))?;
+        }
+
+        self.database.write_db(&db)?;
+        Ok(())
+    }
+    
+    pub fn delete_story(&self, epic_id: u32, story_id: u32) -> Result<()> {
+        let mut db = self.database.read_db()?;
+        db.stories
+                .remove(&story_id)
+                .ok_or(anyhow!("Strory with id #{} was not found.", epic_id))?;
+        let mut epic = db.epics.get_mut(&epic_id).ok_or(anyhow!("Strory with id #{} was not found.", story_id))?;
+        epic.stories = epic.stories.clone().into_iter().filter(|s| *s != story_id).collect::<Vec<u32>>();
+        
+        self.database.write_db(&db)?;
+        Ok(())
+    }
+    
+    pub fn update_epic_status(&self, epic_id: u32, status: Status) -> Result<()> {
+        todo!()
+    }
+    
+    pub fn update_story_status(&self, story_id: u32, status: Status) -> Result<()> {
+        todo!()
+    }
+}
 
 pub mod test_utils {
     use std::{cell::RefCell, collections::HashMap};
@@ -108,14 +128,13 @@ pub mod test_utils {
 
     impl Database for MockDB {
         fn read_db(&self) -> Result<DBState> {
-            // TODO: fix this error by deriving the appropriate traits for Story
             let state = self.last_written_state.borrow().clone();
             Ok(state)
         }
 
         fn write_db(&self, db_state: &DBState) -> Result<()> {
             let latest_state = &self.last_written_state;
-            // TODO: fix this error by deriving the appropriate traits for DBState
+
             *latest_state.borrow_mut() = db_state.clone();
             Ok(())
         }
