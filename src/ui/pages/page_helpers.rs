@@ -1,8 +1,7 @@
 use ellipse::Ellipse;
 
 pub fn get_column_string(text: &str, width: usize) -> String {
-    // todo!() // use the truncate_ellipse function from the ellipse crate
-    ellipse::truncate_ellipse()
+    text.truncate_ellipse(width).to_string()
 }
 
 #[cfg(test)]

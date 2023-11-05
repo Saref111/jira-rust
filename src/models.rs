@@ -1,8 +1,8 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Display};
 
 use serde::{Serialize, Deserialize};
 
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Copy)]
 pub enum Status {
     Open,
     InProgress,
@@ -19,7 +19,19 @@ impl From<String> for Status {
             "Closed" => Status::Closed,
             _ => Status::Open,
         }
+    }
 }
+
+impl Display for Status {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
+        match self {
+            Self::Open => write!(f, "Open"),
+            Self::Closed => write!(f, "Closed"),
+            Self::InProgress => write!(f, "InProgress"),
+            Self::Resolved => write!(f, "Resolved"),
+            _ => write!(f, "Open")
+        }
+    }
 }
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct Epic {

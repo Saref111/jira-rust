@@ -1,11 +1,14 @@
+use std::cmp::Ordering;
 use std::rc::Rc;
 
+use anyhow::Ok;
 use itertools::Itertools;
 use anyhow::Result;
 use anyhow::anyhow;
 
 use crate::db::JiraDatabase;
 use crate::models::Action;
+use crate::models::DBState;
 
 mod page_helpers;
 use page_helpers::*;
@@ -20,11 +23,18 @@ pub struct HomePage {
 }
 impl Page for HomePage {
     fn draw_page(&self) -> Result<()> {
+        let db_state = self.db.read_db()?;
+        let mut epics = db_state.epics.iter().collect::<Vec<_>>();
+        epics.sort_by(|a, b| if a.0 > b.0 {Ordering::Less} else {Ordering::Greater});
         println!("----------------------------- EPICS -----------------------------");
         println!("     id     |               name               |      status      ");
 
-        // TODO: print out epics using get_column_string(). also make sure the epics are sorted by id
-
+        
+        for (id, epic) in epics {
+            let epic_name = get_column_string(&epic.name, 34);
+            println!("     {}     |{}|{}", id, epic_name, epic.status);
+        }
+        
         println!();
         println!();
 
@@ -34,7 +44,27 @@ impl Page for HomePage {
     }
 
     fn handle_input(&self, input: &str) -> Result<Option<Action>> {
-        todo!() // match against the user input and return the corresponding action. If the user input was invalid return None.
+        if input.is_empty() {return Ok(None)}
+
+        match input {
+            "q" => Ok(Some(Action::Exit)),
+            "c" => Ok(Some(Action::CreateEpic)),
+            _ => {
+                let parsed = input.parse::<u32>(); 
+                if let Err(_) = parsed {
+                    return Ok(None)
+                }
+
+                let parsed = parsed.unwrap();
+
+                let DBState { last_item_id, ..} = self.db.read_db()?;
+                if parsed > last_item_id {
+                    return Ok(None)
+                }
+
+                Ok(Some(Action::NavigateToEpicDetail { epic_id: parsed }))
+            }
+        }
     }
 }
 
