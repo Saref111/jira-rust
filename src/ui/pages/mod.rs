@@ -1,4 +1,3 @@
-use std::cmp::Ordering;
 use std::rc::Rc;
 
 use anyhow::Ok;
@@ -24,8 +23,7 @@ pub struct HomePage {
 impl Page for HomePage {
     fn draw_page(&self) -> Result<()> {
         let db_state = self.db.read_db()?;
-        let mut epics = db_state.epics.iter().collect::<Vec<_>>();
-        epics.sort_by(|a, b| if a.0 > b.0 {Ordering::Less} else {Ordering::Greater});
+        let epics = db_state.epics.iter().sorted().collect::<Vec<_>>();
         println!("----------------------------- EPICS -----------------------------");
         println!("     id     |               name               |      status      ");
 

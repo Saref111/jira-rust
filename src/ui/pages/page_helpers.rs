@@ -1,8 +1,27 @@
 use ellipse::Ellipse;
 
 pub fn get_column_string(text: &str, width: usize) -> String {
-    text.truncate_ellipse(width).to_string()
+    if width == 0 {return "".to_owned()}
+    else if width == 1 {return  ".".to_owned()}
+    else if width == 2 {return  "..".to_owned()}
+    else if width == 3 {return  "...".to_owned()}
+
+    match width.cmp(&text.len()) {
+        std::cmp::Ordering::Less => {
+            text.truncate_ellipse(width - 3).to_string()
+        },
+        std::cmp::Ordering::Equal => text.to_string(),
+        std::cmp::Ordering::Greater => {
+            let mut result = String::from(text);
+            let delta = width - text.len();
+
+            (0..delta).for_each(|_| result.push_str(" "));
+            result
+        },
+    }
 }
+
+
 
 #[cfg(test)]
 mod tests {
