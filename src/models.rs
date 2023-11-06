@@ -1,8 +1,8 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Display};
 
 use serde::{Serialize, Deserialize};
 
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Copy, Eq, PartialOrd, Ord)]
 pub enum Status {
     Open,
     InProgress,
@@ -19,9 +19,20 @@ impl From<String> for Status {
             "Closed" => Status::Closed,
             _ => Status::Open,
         }
+    }
 }
+
+impl Display for Status {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
+        match self {
+            Self::Open => write!(f, "OPEN"),
+            Self::Closed => write!(f, "CLOSED"),
+            Self::InProgress => write!(f, "IN PROGRESS"),
+            Self::Resolved => write!(f, "RESOLVED")
+        }
+    }
 }
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Eq, PartialOrd, Ord)]
 pub struct Epic {
     pub name: String,
     pub description: String,
@@ -40,7 +51,7 @@ impl Epic {
     }
 }
 
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Eq, PartialOrd, Ord)]
 pub struct Story {
     pub name: String,
     pub description: String,
@@ -62,4 +73,18 @@ pub struct DBState {
     pub last_item_id: u32,
     pub epics: HashMap<u32, Epic>,
     pub stories: HashMap<u32, Story>,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum Action {
+    NavigateToEpicDetail { epic_id: u32 },
+    NavigateToStoryDetail { epic_id: u32, story_id: u32 },
+    NavigateToPreviousPage,
+    CreateEpic,
+    UpdateEpicStatus { epic_id: u32 },
+    DeleteEpic { epic_id: u32 },
+    CreateStory { epic_id: u32 },
+    UpdateStoryStatus { story_id: u32 },
+    DeleteStory { epic_id: u32, story_id: u32 },
+    Exit,
 }
