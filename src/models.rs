@@ -28,8 +28,7 @@ impl Display for Status {
             Self::Open => write!(f, "OPEN"),
             Self::Closed => write!(f, "CLOSED"),
             Self::InProgress => write!(f, "IN PROGRESS"),
-            Self::Resolved => write!(f, "RESOLVED"),
-            _ => write!(f, "OPEN")
+            Self::Resolved => write!(f, "RESOLVED")
         }
     }
 }
@@ -52,7 +51,7 @@ impl Epic {
     }
 }
 
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Eq, PartialOrd, Ord)]
 pub struct Story {
     pub name: String,
     pub description: String,
