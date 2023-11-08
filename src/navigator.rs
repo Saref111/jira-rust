@@ -48,31 +48,31 @@ impl Navigator {
             }
             Action::CreateEpic => {
                 let epic = (self.prompts.create_epic)();
-                self.db.create_epic(epic)?;
+                self.db.create_epic(epic).with_context(|| anyhow!("failed to create epic!"))?;
             }
             Action::UpdateEpicStatus { epic_id } => {
                 let new_status = (self.prompts.update_status)();
                 
                 if let Some(new_status) = new_status {
-                    self.db.update_epic_status(epic_id, new_status)?;
+                    self.db.update_epic_status(epic_id, new_status).with_context(|| anyhow!("failed to update epic!"))?;
                 }
             }
             Action::DeleteEpic { epic_id } => {
-                self.db.delete_epic(epic_id)?;
+                self.db.delete_epic(epic_id).with_context(|| anyhow!("failed to delete epic!"))?;
             }
             Action::CreateStory { epic_id } => {
                 let story = (self.prompts.create_story)();
-                self.db.create_story(story, epic_id)?;
+                self.db.create_story(story, epic_id).with_context(|| anyhow!("failed to create story!"))?;
             }
             Action::UpdateStoryStatus { story_id } => {
                 let new_status = (self.prompts.update_status)();
                 
                 if let Some(new_status) = new_status {
-                    self.db.update_story_status(story_id, new_status)?;
+                    self.db.update_story_status(story_id, new_status).with_context(|| anyhow!("failed to update story!"))?;
                 }
             }
             Action::DeleteStory { epic_id, story_id } => {
-                self.db.delete_story(epic_id, story_id)?;
+                self.db.delete_story(epic_id, story_id).with_context(|| anyhow!("failed to delete story!"))?;
             }
             Action::Exit => {
                 self.pages = vec![]
