@@ -11,7 +11,15 @@ pub struct Navigator {
 
 impl Navigator {
     pub fn new(db: Rc<JiraDatabase>) -> Self {
-        Self { pages: vec![Box::new(HomePage { db: db.clone() })], prompts: Prompts::new(), db: db.clone() }
+        Self { 
+            pages: vec![
+                Box::new(HomePage { 
+                    db: db.clone() 
+                })
+            ],
+            prompts: Prompts::new(), 
+            db: db.clone()
+        }
     }
 
     pub fn get_current_page(&self) -> Option<&Box<dyn Page>> {
@@ -21,31 +29,50 @@ impl Navigator {
     pub fn handle_action(&mut self, action: Action) -> Result<()> {
         match action {
             Action::NavigateToEpicDetail { epic_id } => {
-                todo!() // create a new EpicDetail instance and add it to the pages vector
+                let epic_detail = EpicDetail { epic_id, db: self.db.clone() };
+
+                self.pages.push(Box::new(epic_detail))
             }
             Action::NavigateToStoryDetail { epic_id, story_id } => {
-                todo!() // create a new StoryDetail instance and add it to the pages vector
+                let story_detail = StoryDetail {
+                    epic_id,
+                    story_id,
+                    db: self.db.clone(),
+                };
+                self.pages.push(Box::new(story_detail));
             }
             Action::NavigateToPreviousPage => {
-                todo!() // remove the last page from the pages vector
+                if self.pages.len() > 0 {
+                    self.pages.remove(self.pages.len() - 1);
+                }
             }
             Action::CreateEpic => {
-                todo!() // prompt the user to create a new epic and persist it in the database
+                let epic = (self.prompts.create_epic)();
+                self.db.create_epic(epic)?;
             }
             Action::UpdateEpicStatus { epic_id } => {
-                todo!() // prompt the user to update status and persist it in the database
+                let new_status = (self.prompts.update_status)();
+                
+                if let Some(new_status) = new_status {
+                    self.db.update_epic_status(epic_id, new_status)?;
+                }
             }
             Action::DeleteEpic { epic_id } => {
-                todo!() // prompt the user to delete the epic and persist it in the database
+                self.db.delete_epic(epic_id)?;
             }
             Action::CreateStory { epic_id } => {
-                todo!() // prompt the user to create a new story and persist it in the database
+                let story = (self.prompts.create_story)();
+                self.db.create_story(story, epic_id)?;
             }
             Action::UpdateStoryStatus { story_id } => {
-                todo!() // prompt the user to update status and persist it in the database
+                let new_status = (self.prompts.update_status)();
+                
+                if let Some(new_status) = new_status {
+                    self.db.update_story_status(story_id, new_status)?;
+                }
             }
             Action::DeleteStory { epic_id, story_id } => {
-                todo!() // prompt the user to delete the story and persist it in the database
+                self.db.delete_story(epic_id, story_id)?;
             }
             Action::Exit => {
                 self.pages = vec![]
