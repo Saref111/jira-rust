@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::rc::Rc;
 
 use anyhow::Ok;
@@ -17,11 +18,13 @@ use page_helpers::*;
 pub trait Page {
     fn draw_page(&self) -> Result<()>;
     fn handle_input(&self, input: &str) -> Result<Option<Action>>;
+    fn as_any(&self) -> &dyn Any;
 }
 
 pub struct HomePage {
     pub db: Rc<JiraDatabase>
 }
+
 impl Page for HomePage {
     fn draw_page(&self) -> Result<()> {
         let db_state = self.db.read_db()?;
@@ -50,11 +53,12 @@ impl Page for HomePage {
     fn handle_input(&self, input: &str) -> Result<Option<Action>> {
         if input.is_empty() {return Ok(None)}
 
-        match input {
+        match input.trim() {
             "q" => Ok(Some(Action::Exit)),
             "c" => Ok(Some(Action::CreateEpic)),
-            _ => {
-                let parsed = input.parse::<u32>(); 
+            i => {
+                let parsed = i.parse::<u32>();
+
                 if let Err(_) = parsed {
                     return Ok(None)
                 }
@@ -70,6 +74,11 @@ impl Page for HomePage {
             }
         }
     }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
 }
 
 pub struct EpicDetail {
@@ -98,7 +107,7 @@ impl Page for EpicDetail {
         println!("---------------------------- STORIES ----------------------------");
         println!("     id     |               name               |      status      ");
 
-        let stories: Vec<(&u32, &Story)> = db_state.stories.iter().sorted().collect::<Vec<_>>();
+        let stories: Vec<(&u32, &Story)> = db_state.stories.iter().filter(|(id, _)| epic.stories.contains(*id)).sorted().collect::<Vec<_>>();
 
         for (id, story) in stories {
             println!(
@@ -120,13 +129,13 @@ impl Page for EpicDetail {
     fn handle_input(&self, input: &str) -> Result<Option<Action>> {
         if input.is_empty() {return Ok(None)}
 
-        match input {
+        match input.trim() {
             "p" => Ok(Some(Action::NavigateToPreviousPage)),
             "u" => Ok(Some(Action::UpdateEpicStatus { epic_id: self.epic_id })),
             "d" => Ok(Some(Action::DeleteEpic { epic_id: self.epic_id })),
             "c" => Ok(Some(Action::CreateStory { epic_id: self.epic_id })),
-            _ => {
-                let parsed = input.parse::<u32>(); 
+            i => {
+                let parsed = i.parse::<u32>(); 
                 if let Err(_) = parsed {
                     return Ok(None)
                 }
@@ -142,6 +151,11 @@ impl Page for EpicDetail {
             }
         }
     }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
 }
 
 pub struct StoryDetail {
@@ -177,13 +191,18 @@ impl Page for StoryDetail {
     fn handle_input(&self, input: &str) -> Result<Option<Action>> {
         if input.is_empty() {return Ok(None)}
 
-        match input {
+        match input.trim() {
             "p" => Ok(Some(Action::NavigateToPreviousPage)),
             "u" => Ok(Some(Action::UpdateStoryStatus { story_id: self.story_id })),
             "d" => Ok(Some(Action::DeleteStory { epic_id: self.epic_id, story_id: self.story_id })),
             _ => Ok(None)
         }
     }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
 }
 
 #[cfg(test)]
