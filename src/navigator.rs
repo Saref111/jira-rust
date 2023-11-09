@@ -81,8 +81,11 @@ impl Navigator {
                 }
             }
             Action::DeleteStory { epic_id, story_id } => {
-                if (self.prompts.delete_epic)() {
+                if (self.prompts.delete_story)() {
                     self.db.delete_story(epic_id, story_id).with_context(|| anyhow!("failed to delete story!"))?;
+                    if self.pages.len() > 0 {
+                        self.pages.remove(self.pages.len() - 1);
+                    }
                 }
             }
             Action::Exit => {

@@ -69,7 +69,7 @@ fn update_status_prompt() -> Option<Status> {
     println!("----------------------------");
     println!("New Status (1 - OPEN, 2 - IN-PROGRESS, 3 - RESOLVED, 4 - CLOSED):");
 
-    match get_user_input().as_str() {
+    match get_user_input().trim() {
         "1" => Some(Status::Open),
         "2" => Some(Status::InProgress),
         "3" => Some(Status::Resolved),

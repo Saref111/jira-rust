@@ -134,8 +134,8 @@ impl Page for EpicDetail {
             "u" => Ok(Some(Action::UpdateEpicStatus { epic_id: self.epic_id })),
             "d" => Ok(Some(Action::DeleteEpic { epic_id: self.epic_id })),
             "c" => Ok(Some(Action::CreateStory { epic_id: self.epic_id })),
-            _ => {
-                let parsed = input.parse::<u32>(); 
+            i => {
+                let parsed = i.parse::<u32>(); 
                 if let Err(_) = parsed {
                     return Ok(None)
                 }

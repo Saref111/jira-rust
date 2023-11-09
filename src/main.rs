@@ -14,7 +14,6 @@ mod navigator;
 use navigator::*;
 
 fn main() {
-    // TODO: create database and navigator
     let db = Rc::new(JiraDatabase::new("./data/db.json".to_owned()));
     let mut nav = Navigator::new(db);
     
@@ -58,8 +57,5 @@ fn main() {
                 wait_for_key_press();
             }
         }
-        // 3. get user input
-        // 4. pass input to page's input handler
-        // 5. if the page's input handler returns an action let the navigator process the action
     }
 }
