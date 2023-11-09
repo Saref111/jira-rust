@@ -23,7 +23,11 @@ impl Navigator {
     }
 
     pub fn get_current_page(&self) -> Option<&Box<dyn Page>> {
-        self.pages.get(self.pages.len() -1)
+        if self.pages.len() > 0 {
+            self.pages.get(self.pages.len() -1)
+        } else {
+            None
+        }
     }
 
     pub fn handle_action(&mut self, action: Action) -> Result<()> {
@@ -58,7 +62,12 @@ impl Navigator {
                 }
             }
             Action::DeleteEpic { epic_id } => {
-                self.db.delete_epic(epic_id).with_context(|| anyhow!("failed to delete epic!"))?;
+                if (self.prompts.delete_epic)() {
+                    self.db.delete_epic(epic_id).with_context(|| anyhow!("failed to delete epic!"))?;
+                    if self.pages.len() > 0 {
+                        self.pages.remove(self.pages.len() - 1);
+                    }
+                }
             }
             Action::CreateStory { epic_id } => {
                 let story = (self.prompts.create_story)();
@@ -72,7 +81,9 @@ impl Navigator {
                 }
             }
             Action::DeleteStory { epic_id, story_id } => {
-                self.db.delete_story(epic_id, story_id).with_context(|| anyhow!("failed to delete story!"))?;
+                if (self.prompts.delete_epic)() {
+                    self.db.delete_story(epic_id, story_id).with_context(|| anyhow!("failed to delete story!"))?;
+                }
             }
             Action::Exit => {
                 self.pages = vec![]

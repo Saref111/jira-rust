@@ -28,8 +28,8 @@ fn create_epic_prompt() -> Epic {
     let description = get_user_input();
 
     Epic {
-        name,
-        description,
+        name: name.trim().to_owned(),
+        description: description.trim().to_owned(),
         status: Status::Open,
         stories: vec![]
     }
@@ -42,14 +42,14 @@ fn create_story_prompt() -> Story {
     println!("Story description:");
     let description = get_user_input();
 
-    Story { name, description, status: Status::Open }
+    Story { name: name.trim().to_owned(), description: description.trim().to_owned(), status: Status::Open }
 }
 
 fn delete_epic_prompt() -> bool {
     println!("----------------------------");
     println!("Are you sure you want to delete this epic? All stories in this epic will also be deleted [Y/n]:");
 
-    match get_user_input().as_str() {
+    match get_user_input().trim() {
         "Y" => true,
         _ => false
     }
@@ -59,7 +59,7 @@ fn delete_story_prompt() -> bool {
     println!("----------------------------");
     println!("Are you sure you want to delete this story? [Y/n]:");
 
-    match get_user_input().as_str() {
+    match get_user_input().trim() {
         "Y" => true,
         _ => false
     }
